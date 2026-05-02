@@ -324,7 +324,7 @@ export default function HomePage() {
           }
           .hero-login-card {
             width: auto;
-            margin: 0 20px;
+            margin: 24px 20px 0;  /* add top margin here */
           }
         }
       `}</style>
