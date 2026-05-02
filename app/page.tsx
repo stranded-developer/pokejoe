@@ -163,10 +163,7 @@ export default function HomePage() {
     WebkitTextFillColor: 'white',
     caretColor: 'var(--gold)',
   }}
-  onFocus={e => { 
-    e.target.removeAttribute('readonly');
-    if (!loginError) e.target.style.borderColor = 'rgba(212,160,23,0.5)'; 
-  }}
+
   onBlur={e => { if (!loginError) e.target.style.borderColor = 'rgba(255,255,255,0.12)'; }}
 />
                 </div>
