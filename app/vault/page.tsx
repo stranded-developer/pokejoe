@@ -17,6 +17,8 @@ type VaultItem = {
   photos: string[];
 };
 
+const SESSION_KEY = 'pokejoe_username';
+
 export default function VaultPage() {
   const [waNumber, setWaNumber] = useState('62xxxxxxxxxx');
 
@@ -30,13 +32,45 @@ export default function VaultPage() {
     });
   }, []);
 
-  const [step, setStep] = useState<'login'|'vault'>('login');
+  const [step, setStep] = useState<'loading'|'login'|'vault'>('loading');
   const [loginInput, setLoginInput] = useState('');
   const [loginError, setLoginError] = useState(false);
   const [loading, setLoading] = useState(false);
   const [customer, setCustomer] = useState<Customer|null>(null);
   const [vaultItems, setVaultItems] = useState<VaultItem[]>([]);
   const [activeTab, setActiveTab] = useState<'points'|'items'|'redeem'>('points');
+
+  // On mount: check localStorage for saved session
+  useEffect(() => {
+    const saved = localStorage.getItem(SESSION_KEY);
+    if (saved) {
+      // Auto-login with saved username
+      autoLogin(saved);
+    } else {
+      setStep('login');
+    }
+  }, []);
+
+  async function autoLogin(username: string) {
+    setLoading(true);
+    try {
+      const data = await getCustomer(username.trim()) as Customer|null;
+      if (data) {
+        setCustomer(data);
+        const items = await getVaultItems(username.trim()) as VaultItem[];
+        setVaultItems(items);
+        setStep('vault');
+      } else {
+        // Saved username no longer valid, clear it
+        localStorage.removeItem(SESSION_KEY);
+        setStep('login');
+      }
+    } catch {
+      localStorage.removeItem(SESSION_KEY);
+      setStep('login');
+    }
+    setLoading(false);
+  }
 
   async function doLogin() {
     if (!loginInput.trim()) return;
@@ -45,6 +79,7 @@ export default function VaultPage() {
     try {
       const data = await getCustomer(loginInput.trim()) as Customer|null;
       if (data) {
+        localStorage.setItem(SESSION_KEY, loginInput.trim());
         setCustomer(data);
         const items = await getVaultItems(loginInput.trim()) as VaultItem[];
         setVaultItems(items);
@@ -56,6 +91,15 @@ export default function VaultPage() {
     setLoading(false);
   }
 
+  function doLogout() {
+    localStorage.removeItem(SESSION_KEY);
+    setStep('login');
+    setCustomer(null);
+    setVaultItems([]);
+    setLoginInput('');
+    setLoginError(false);
+  }
+
   function formatRp(n: number) {
     if (!n) return 'Rp 0';
     return 'Rp ' + n.toLocaleString('id-ID');
@@ -63,6 +107,16 @@ export default function VaultPage() {
   function formatDate(iso: string) {
     return new Date(iso).toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' });
   }
+
+  // Loading state (checking localStorage)
+  if (step === 'loading') return (
+    <>
+      <Navbar />
+      <div style={{ background:'var(--black)', display:'flex', alignItems:'center', justifyContent:'center', minHeight:'100vh' }}>
+        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', fontFamily: 'var(--ff-mono)' }}>Loading your vault...</div>
+      </div>
+    </>
+  );
 
   if (step === 'login') return (
     <>
@@ -80,14 +134,17 @@ export default function VaultPage() {
           </div>
           <hr style={{ border:'none', borderTop:'1px solid rgba(255,255,255,0.08)', marginBottom:28 }} />
           <label style={{ display:'block', fontSize:11, color:'rgba(255,255,255,0.4)', letterSpacing:'0.1em', textTransform:'uppercase', marginBottom:8, fontWeight:500 }}>Your Username</label>
-          <input
-            type="text"
-            placeholder="e.g. Fragz1777"
-            value={loginInput}
-            onChange={e => setLoginInput(e.target.value)}
-            onKeyDown={e => e.key==='Enter' && doLogin()}
-            style={{ width:'100%', background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:8, padding:'13px 16px', color:'white', fontFamily:'var(--ff-mono)', fontSize:15, outline:'none', boxSizing:'border-box', marginBottom:16 }}
-          />
+          <div style={{ position: 'relative', marginBottom: 16 }}>
+            <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: 'rgba(255,255,255,0.2)', fontFamily: 'var(--ff-mono)', pointerEvents: 'none' }}>@</span>
+            <input
+              type="text"
+              placeholder="yourUsername"
+              value={loginInput}
+              onChange={e => setLoginInput(e.target.value)}
+              onKeyDown={e => e.key==='Enter' && doLogin()}
+              style={{ width:'100%', background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:8, padding:'13px 16px 13px 30px', color:'white', fontFamily:'var(--ff-mono)', fontSize:15, outline:'none', boxSizing:'border-box' }}
+            />
+          </div>
           <button onClick={doLogin} disabled={loading} style={{ width:'100%', background:'var(--gold)', color:'var(--black)', border:'none', padding:14, borderRadius:8, fontFamily:'var(--ff-body)', fontSize:15, fontWeight:600, cursor:'pointer', opacity:loading?0.7:1 }}>
             {loading ? 'Checking...' : 'Enter Vault →'}
           </button>
@@ -106,7 +163,7 @@ export default function VaultPage() {
 
   return (
     <>
-      <Navbar />
+      <Navbar loggedInUser={customer?.username} onLogout={doLogout} />
       <div style={{ background:'#F2F4F8', paddingTop:'var(--nav-h)', minHeight:'100vh' }}>
 
         {/* Tabs */}
@@ -126,7 +183,7 @@ export default function VaultPage() {
               {customer?.username.toUpperCase()}<span style={{ color:'var(--gold)' }}>&apos;S VAULT</span>
             </div>
           </div>
-          <button onClick={() => { setStep('login'); setCustomer(null); setVaultItems([]); setLoginInput(''); }} style={{ background:'transparent', border:'1px solid #E0E4EE', color:'#8892A8', padding:'8px 16px', borderRadius:8, fontSize:12, cursor:'pointer', fontFamily:'var(--ff-body)', flexShrink:0 }}>
+          <button onClick={doLogout} style={{ background:'transparent', border:'1px solid #E0E4EE', color:'#8892A8', padding:'8px 16px', borderRadius:8, fontSize:12, cursor:'pointer', fontFamily:'var(--ff-body)', flexShrink:0 }}>
             Logout
           </button>
         </div>

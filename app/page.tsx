@@ -1,19 +1,34 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
-import { getProducts } from '@/lib/db';
+import { getProducts, getCustomer } from '@/lib/db';
 import { getDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 type Product = { id:string; name:string; series?:string; price:number; emoji?:string; badge?:string; imageUrl?:string; images?:string[]; };
 
 const POKEMON = ['🔴 Charizard','⚡ Pikachu','💜 Mewtwo','🐲 Rayquaza','🔥 Charmander','🌊 Gyarados','🍃 Bulbasaur','❄️ Articuno'];
+const SESSION_KEY = 'pokejoe_username';
 
 export default function HomePage() {
+  const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [activeImg, setActiveImg] = useState<Record<string,number>>({});
   const [waNumber, setWaNumber] = useState('62xxxxxxxxxx');
+
+  // Auth state
+  const [loggedInUser, setLoggedInUser] = useState<string|null>(null);
+  const [loginInput, setLoginInput] = useState('');
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [loginError, setLoginError] = useState('');
+
+  // Restore session from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem(SESSION_KEY);
+    if (saved) setLoggedInUser(saved);
+  }, []);
 
   useEffect(() => {
     getDoc(doc(db, 'config', 'whatsapp')).then(snap => {
@@ -27,9 +42,40 @@ export default function HomePage() {
     }).catch(() => {});
   }, []);
 
+  async function handleLogin() {
+    const username = loginInput.trim();
+    if (!username) return;
+    setLoginLoading(true);
+    setLoginError('');
+    try {
+      const data = await getCustomer(username);
+      if (data) {
+        localStorage.setItem(SESSION_KEY, username);
+        setLoggedInUser(username);
+        setLoginInput('');
+      } else {
+        setLoginError('Username not found. Contact PokeJoe to get access.');
+      }
+    } catch {
+      setLoginError('Something went wrong. Please try again.');
+    }
+    setLoginLoading(false);
+  }
+
+  function handleLogout() {
+    localStorage.removeItem(SESSION_KEY);
+    setLoggedInUser(null);
+    setLoginInput('');
+    setLoginError('');
+  }
+
+  function goToVault() {
+    router.push('/vault');
+  }
+
   return (
     <>
-      <Navbar />
+      <Navbar loggedInUser={loggedInUser} onLogout={handleLogout} />
 
       {/* HERO */}
       <section style={{ background: 'var(--black)', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', overflow: 'hidden', paddingTop: 'var(--nav-h)' }}>
@@ -37,20 +83,84 @@ export default function HomePage() {
         <div style={{ position: 'absolute', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(212,160,23,0.12) 0%, transparent 70%)', top: -100, right: '5%', filter: 'blur(80px)' }} />
         <div style={{ position: 'absolute', fontSize: 260, opacity: 0.04, right: -20, top: '50%', transform: 'translateY(-50%)', animation: 'float 8s ease-in-out infinite' }}>🐲</div>
 
-        <div className="hero-content">
-          <div style={{ fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: 20, fontWeight: 500 }}>
-            Indonesia&apos;s Premier TCG Vault
+        <div className="hero-main-layout">
+          {/* Left: copy */}
+          <div className="hero-content">
+            <div style={{ fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: 20, fontWeight: 500 }}>
+              Indonesia&apos;s Premier TCG Vault
+            </div>
+            <h1 className="hero-title">
+              YOUR<br /><span style={{ color: 'var(--gold)' }}>POKEMON</span><br />
+              <span style={{ WebkitTextStroke: '2px rgba(255,255,255,0.25)', color: 'transparent' }}>VAULT</span>
+            </h1>
+            <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.45)', lineHeight: 1.7, maxWidth: 480, marginBottom: 40, fontWeight: 300 }}>
+              Rip &amp; ship, vault storage, and earn rewards with every purchase.
+            </p>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              <Link href="/catalog" style={{ background: 'var(--gold)', color: 'var(--black)', textDecoration: 'none', padding: '14px 28px', borderRadius: 8, fontSize: 14, fontWeight: 600 }}>Browse Catalog →</Link>
+              <Link href="/vault" style={{ background: 'transparent', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.2)', textDecoration: 'none', padding: '14px 28px', borderRadius: 8, fontSize: 14 }}>My Vault</Link>
+            </div>
           </div>
-          <h1 className="hero-title">
-            YOUR<br /><span style={{ color: 'var(--gold)' }}>POKEMON</span><br />
-            <span style={{ WebkitTextStroke: '2px rgba(255,255,255,0.25)', color: 'transparent' }}>VAULT</span>
-          </h1>
-          <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.45)', lineHeight: 1.7, maxWidth: 480, marginBottom: 40, fontWeight: 300 }}>
-            Rip & ship, vault storage, and earn rewards with every purchase.
-          </p>
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            <Link href="/catalog" style={{ background: 'var(--gold)', color: 'var(--black)', textDecoration: 'none', padding: '14px 28px', borderRadius: 8, fontSize: 14, fontWeight: 600 }}>Browse Catalog →</Link>
-            <Link href="/vault" style={{ background: 'transparent', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.2)', textDecoration: 'none', padding: '14px 28px', borderRadius: 8, fontSize: 14 }}>My Vault</Link>
+
+          {/* Right: login/points card */}
+          <div className="hero-login-card">
+            {loggedInUser ? (
+              /* Logged-in state */
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(212,160,23,0.15)', border: '2px solid rgba(212,160,23,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, margin: '0 auto 16px' }}>⭐</div>
+                <div style={{ fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 4 }}>Welcome back</div>
+                <div style={{ fontFamily: 'var(--ff-display)', fontSize: 28, color: 'white', letterSpacing: '0.06em', marginBottom: 2 }}>
+                  {loggedInUser.toUpperCase()}
+                </div>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)', marginBottom: 24 }}>Session active</div>
+
+                
+              </div>
+            ) : (
+              /* Logged-out state */
+              <>
+                <div style={{ marginBottom: 24 }}>
+                  <div style={{ fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: 8, fontWeight: 500 }}>Customer Access</div>
+                  <div style={{ fontFamily: 'var(--ff-display)', fontSize: 26, color: 'white', letterSpacing: '0.04em', lineHeight: 1.1, marginBottom: 8 }}>VIEW YOUR POINTS</div>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', lineHeight: 1.6 }}>Enter your username to access your vault, points balance, and purchase history.</div>
+                </div>
+
+                <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.07)', marginBottom: 20 }} />
+
+                <label style={{ display: 'block', fontSize: 10, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8, fontWeight: 500 }}>Username</label>
+                <div style={{ position: 'relative', marginBottom: 12 }}>
+                  <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: 'rgba(255,255,255,0.2)', fontFamily: 'var(--ff-mono)', pointerEvents: 'none' }}>@</span>
+                  <input
+                    type="text"
+                    placeholder="yourUsername"
+                    value={loginInput}
+                    onChange={e => { setLoginInput(e.target.value); setLoginError(''); }}
+                    onKeyDown={e => e.key === 'Enter' && handleLogin()}
+                    style={{ width: '100%', background: 'rgba(255,255,255,0.06)', border: `1px solid ${loginError ? 'rgba(230,57,70,0.5)' : 'rgba(255,255,255,0.12)'}`, borderRadius: 8, padding: '12px 14px 12px 30px', color: 'white', fontFamily: 'var(--ff-mono)', fontSize: 14, outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.2s' }}
+                    onFocus={e => { if (!loginError) (e.target as HTMLInputElement).style.borderColor = 'rgba(212,160,23,0.5)'; }}
+                    onBlur={e => { if (!loginError) (e.target as HTMLInputElement).style.borderColor = 'rgba(255,255,255,0.12)'; }}
+                  />
+                </div>
+
+                {loginError && (
+                  <div style={{ background: 'rgba(230,57,70,0.1)', border: '1px solid rgba(230,57,70,0.2)', borderRadius: 6, padding: '8px 12px', fontSize: 12, color: '#FF6B75', marginBottom: 12 }}>
+                    {loginError}
+                  </div>
+                )}
+
+                <button
+                  onClick={handleLogin}
+                  disabled={loginLoading || !loginInput.trim()}
+                  style={{ width: '100%', background: loginLoading || !loginInput.trim() ? 'rgba(212,160,23,0.4)' : 'var(--gold)', color: 'var(--black)', border: 'none', padding: '13px 20px', borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: loginLoading || !loginInput.trim() ? 'not-allowed' : 'pointer', fontFamily: 'var(--ff-body)', letterSpacing: '0.04em', transition: 'background 0.2s' }}>
+                  {loginLoading ? 'Checking...' : 'Enter Vault →'}
+                </button>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 16, padding: '10px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: 8 }}>
+                  <span style={{ fontSize: 16 }}>🔒</span>
+                  <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)', lineHeight: 1.5 }}>No password needed — your username is provided by PokeJoe admin.</span>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -64,14 +174,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* POINTS BANNER */}
-      <div className="points-banner">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 13, color: '#5A6278', flexWrap: 'wrap' }}>
-          ⭐ Your Points:
-          <span style={{ fontFamily: 'var(--ff-mono)', background: 'white', border: '1px solid #D0D5E0', padding: '4px 12px', borderRadius: 4, color: '#8892A8' }}>0 pts — Log in to view</span>
-        </div>
-        <Link href="/vault" style={{ background: 'var(--black)', color: 'white', textDecoration: 'none', padding: '7px 16px', borderRadius: 20, fontSize: 12, fontWeight: 500, flexShrink: 0 }}>Log In</Link>
-      </div>
+
 
       {/* CATALOG PREVIEW */}
       <section className="section-pad" style={{ background: 'white' }}>
@@ -185,6 +288,45 @@ export default function HomePage() {
       <style>{`
         @keyframes cardFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-6px);}}
         @keyframes float{0%,100%{transform:translateY(-50%) translateX(0);}50%{transform:translateY(-52%) translateX(-8px);}}
+
+        .hero-main-layout {
+          display: flex;
+          align-items: center;
+          padding-bottom: 140px;
+          gap: 40px;
+        }
+        .hero-content {
+          position: relative;
+          padding: 80px 60px 0 80px;
+          flex: 1;
+          max-width: 640px;
+        }
+        .hero-login-card {
+          position: relative;
+          flex-shrink: 0;
+          width: 340px;
+          margin-right: 80px;
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.1);
+          border-radius: 20px;
+          padding: 32px 28px;
+          backdrop-filter: blur(20px);
+        }
+        @media (max-width: 900px) {
+          .hero-main-layout {
+            flex-direction: column;
+            padding-bottom: 160px;
+            align-items: stretch;
+          }
+          .hero-content {
+            padding: 48px 20px 0;
+            max-width: none;
+          }
+          .hero-login-card {
+            width: auto;
+            margin: 0 20px;
+          }
+        }
       `}</style>
     </>
   );
