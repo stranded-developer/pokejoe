@@ -7,7 +7,6 @@ import { getCustomer } from '@/lib/db';
 const SESSION_KEY = 'pokejoe_username';
 
 interface NavbarProps {
-  // Optional: pages can pass these to keep in sync with their own state
   loggedInUser?: string;
   onLogout?: () => void;
 }
@@ -17,8 +16,6 @@ export default function Navbar({ loggedInUser: propUser, onLogout: propLogout }:
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [points, setPoints] = useState<number | null>(null);
-
-  // Internal session state — reads localStorage so it works on ANY page
   const [internalUser, setInternalUser] = useState<string | null>(null);
 
   useEffect(() => {
@@ -26,7 +23,6 @@ export default function Navbar({ loggedInUser: propUser, onLogout: propLogout }:
     if (saved) setInternalUser(saved);
   }, []);
 
-  // Prefer prop-controlled user (home/vault pages), fall back to internal
   const loggedInUser = propUser ?? internalUser;
 
   function handleLogout() {
@@ -37,11 +33,34 @@ export default function Navbar({ loggedInUser: propUser, onLogout: propLogout }:
     else router.push('/');
   }
 
+  function handleLoginClick() {
+    if (pathname === '/') {
+      const input = document.querySelector('input[type="text"]') as HTMLInputElement;
+      input?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => input?.focus(), 400);
+    } else {
+      router.push('/');
+    }
+  }
+
+  function handleLoginClickMobile() {
+    setMenuOpen(false);
+    if (pathname === '/') {
+      setTimeout(() => {
+        const input = document.querySelector('input[type="text"]') as HTMLInputElement;
+        input?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => input?.focus(), 400);
+      }, 100);
+    } else {
+      router.push('/');
+    }
+  }
+
   useEffect(() => {
     if (!loggedInUser) { setPoints(null); return; }
     getCustomer(loggedInUser).then(data => {
       if (data && typeof (data as { points?: number }).points === 'number') {
-         setPoints((data as unknown as { points: number }).points);
+        setPoints((data as unknown as { points: number }).points);
       }
     }).catch(() => {});
   }, [loggedInUser]);
@@ -87,7 +106,6 @@ export default function Navbar({ loggedInUser: propUser, onLogout: propLogout }:
 
           {loggedInUser ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              {/* Username + Points combined pill */}
               <Link href="/vault" style={{
                 display: 'flex', alignItems: 'center',
                 background: 'rgba(212,160,23,0.08)', border: '1px solid rgba(212,160,23,0.25)',
@@ -112,18 +130,17 @@ export default function Navbar({ loggedInUser: propUser, onLogout: propLogout }:
                   {points === null ? '…' : `${points} pts`}
                 </div>
               </Link>
-
               <button onClick={handleLogout} style={{
                 background: 'transparent', border: '1px solid rgba(0,0,0,0.12)', color: 'rgba(0,0,0,0.4)',
                 padding: '7px 14px', borderRadius: 6, fontSize: 11, cursor: 'pointer',
               }}>Logout</button>
             </div>
           ) : (
-            <Link href="/vault" style={{
+            <button onClick={handleLoginClick} style={{
               background: 'transparent', border: '1px solid rgba(0,0,0,0.15)', color: 'var(--black)',
               padding: '8px 18px', borderRadius: 6, fontSize: 12, fontWeight: 600,
-              cursor: 'pointer', letterSpacing: '0.04em', textDecoration: 'none',
-            }}>MY VAULT</Link>
+              cursor: 'pointer', letterSpacing: '0.04em',
+            }}>LOGIN</button>
           )}
         </div>
 
@@ -176,11 +193,12 @@ export default function Navbar({ loggedInUser: propUser, onLogout: propLogout }:
               }}>Logout</button>
             </div>
           ) : (
-            <Link href="/vault" onClick={() => setMenuOpen(false)} style={{
+            <button onClick={handleLoginClickMobile} style={{
               marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: 'var(--black)', color: 'white', textDecoration: 'none',
+              background: 'var(--black)', color: 'white', border: 'none',
               padding: '12px', borderRadius: 8, fontSize: 13, fontWeight: 600,
-            }}>MY VAULT →</Link>
+              cursor: 'pointer', width: '100%',
+            }}>LOGIN →</button>
           )}
         </div>
       )}

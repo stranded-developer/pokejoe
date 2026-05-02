@@ -178,7 +178,7 @@ export default function HomePage() {
                   onClick={handleLogin}
                   disabled={loginLoading || !loginInput.trim()}
                   style={{ width: '100%', background: loginLoading || !loginInput.trim() ? 'rgba(212,160,23,0.4)' : 'var(--gold)', color: 'var(--black)', border: 'none', padding: '13px 20px', borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: loginLoading || !loginInput.trim() ? 'not-allowed' : 'pointer', fontFamily: 'var(--ff-body)', letterSpacing: '0.04em', transition: 'background 0.2s' }}>
-                  {loginLoading ? 'Checking...' : 'Enter Vault →'}
+                  {loginLoading ? 'Checking...' : 'Login →'}
                 </button>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 16, padding: '10px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: 8 }}>
