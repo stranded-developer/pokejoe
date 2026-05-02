@@ -156,7 +156,7 @@ export default function HomePage() {
     padding: '12px 14px',  // remove the 12px 14px 12px 30px, 
     color: 'white', 
     fontFamily: 'var(--ff-mono)', 
-    fontSize: 14, 
+    fontSize: 16, 
     outline: 'none', 
     boxSizing: 'border-box' as const,
     transition: 'border-color 0.2s',
