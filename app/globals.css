@@ -66,16 +66,11 @@ body { font-family: var(--ff-body); background: var(--white); color: var(--black
   letter-spacing: 0.02em;
   margin-bottom: 24px;
 }
-
 .hero-stats {
-  position: relative;  /* change from absolute */
-  bottom: unset;
-  left: unset;
-  right: unset;
+  position: relative;
   background: rgba(255,255,255,0.04);
   border-top: 1px solid rgba(255,255,255,0.07);
   display: flex;
-  margin-top: auto;  /* pushes to bottom when content is short */
 }
 @media (max-width: 768px) {
   .hero-stats {

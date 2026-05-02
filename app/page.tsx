@@ -82,11 +82,12 @@ export default function HomePage() {
   background: 'var(--black)', 
   minHeight: '100vh', 
   display: 'flex', 
-  flexDirection: 'column',   // already have this
-  justifyContent: 'space-between',  // change from center
+  flexDirection: 'column',
+  justifyContent: 'center',
   position: 'relative', 
   overflow: 'hidden', 
-  paddingTop: 'var(--nav-h)' 
+  paddingTop: 'var(--nav-h)',
+  paddingBottom: 0
 }}>
         <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(212,160,23,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(212,160,23,0.04) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
         <div style={{ position: 'absolute', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(212,160,23,0.12) 0%, transparent 70%)', top: -100, right: '5%', filter: 'blur(80px)' }} />
@@ -298,11 +299,11 @@ export default function HomePage() {
         @keyframes float{0%,100%{transform:translateY(-50%) translateX(0);}50%{transform:translateY(-52%) translateX(-8px);}}
 
         .hero-main-layout {
-          display: flex;
-          align-items: center;
-          padding-bottom: 140px;
-          gap: 40px;
-        }
+  display: flex;
+  align-items: center;
+  padding-bottom: 40px;  /* reduce from 140px */
+  gap: 40px;
+}
         .hero-content {
           position: relative;
           padding: 80px 60px 0 80px;
@@ -321,11 +322,11 @@ export default function HomePage() {
           backdrop-filter: blur(20px);
         }
         @media (max-width: 900px) {
-          .hero-main-layout {
-            flex-direction: column;
-            padding-bottom: 160px;
-            align-items: stretch;
-          }
+  .hero-main-layout {
+    flex-direction: column;
+    padding-bottom: 32px;  /* reduce from 160px */
+    align-items: stretch;
+  }
           .hero-content {
             padding: 48px 20px 0;
             max-width: none;
