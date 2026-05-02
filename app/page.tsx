@@ -138,10 +138,9 @@ export default function HomePage() {
 
                 <label style={{ display: 'block', fontSize: 10, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8, fontWeight: 500 }}>Username</label>
                 <div style={{ position: 'relative', marginBottom: 12 }}>
-                  <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: 'rgba(255,255,255,0.2)', fontFamily: 'var(--ff-mono)', pointerEvents: 'none' }}>@</span>
+                  
                   <input
   type="text"
-  placeholder="yourUsername"
   value={loginInput}
   onChange={e => { setLoginInput(e.target.value); setLoginError(''); }}
   onKeyDown={e => e.key === 'Enter' && handleLogin()}
@@ -149,8 +148,27 @@ export default function HomePage() {
   autoComplete="off"
   readOnly
   onFocus={e => e.target.removeAttribute('readonly')}
-                    onBlur={e => { if (!loginError) (e.target as HTMLInputElement).style.borderColor = 'rgba(255,255,255,0.12)'; }}
-                  />
+  style={{ 
+    width: '100%', 
+    background: 'rgba(255,255,255,0.06)', 
+    border: `1px solid ${loginError ? 'rgba(230,57,70,0.5)' : 'rgba(255,255,255,0.12)'}`, 
+    borderRadius: 8, 
+    padding: '12px 14px',  // remove the 12px 14px 12px 30px, 
+    color: 'white', 
+    fontFamily: 'var(--ff-mono)', 
+    fontSize: 14, 
+    outline: 'none', 
+    boxSizing: 'border-box' as const,
+    transition: 'border-color 0.2s',
+    WebkitTextFillColor: 'white',
+    caretColor: 'var(--gold)',
+  }}
+  onFocus={e => { 
+    e.target.removeAttribute('readonly');
+    if (!loginError) e.target.style.borderColor = 'rgba(212,160,23,0.5)'; 
+  }}
+  onBlur={e => { if (!loginError) e.target.style.borderColor = 'rgba(255,255,255,0.12)'; }}
+/>
                 </div>
 
                 {loginError && (
