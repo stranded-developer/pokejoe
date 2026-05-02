@@ -306,7 +306,7 @@ export default function HomePage() {
 }
         .hero-content {
           position: relative;
-          padding: 80px 60px 0 80px;
+          padding: 40px 60px 0 80px;
           flex: 1;
           max-width: 640px;
         }
