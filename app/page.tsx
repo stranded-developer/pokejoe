@@ -78,12 +78,20 @@ export default function HomePage() {
       <Navbar loggedInUser={loggedInUser ?? undefined} onLogout={handleLogout} />
 
       {/* HERO */}
-      <section style={{ background: 'var(--black)', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', overflow: 'hidden', paddingTop: 'var(--nav-h)' }}>
+      <section style={{ 
+  background: 'var(--black)', 
+  minHeight: '100vh', 
+  display: 'flex', 
+  flexDirection: 'column',   // already have this
+  justifyContent: 'space-between',  // change from center
+  position: 'relative', 
+  overflow: 'hidden', 
+  paddingTop: 'var(--nav-h)' 
+}}>
         <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(212,160,23,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(212,160,23,0.04) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
         <div style={{ position: 'absolute', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(212,160,23,0.12) 0%, transparent 70%)', top: -100, right: '5%', filter: 'blur(80px)' }} />
         <div style={{ position: 'absolute', fontSize: 260, opacity: 0.04, right: -20, top: '50%', transform: 'translateY(-50%)', animation: 'float 8s ease-in-out infinite' }}>🐲</div>
-
-        <div className="hero-main-layout">
+<div className="hero-main-layout" style={{ flex: 1 }}>
           {/* Left: copy */}
           <div className="hero-content">
             <div style={{ fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--gold)', marginBottom: 20, fontWeight: 500 }}>
@@ -324,7 +332,7 @@ export default function HomePage() {
           }
           .hero-login-card {
             width: auto;
-            margin: 40px 20px 0;  /* add top margin here */
+            margin: 100px 20px 0;  /* add top margin here */
           }
         }
       `}</style>
