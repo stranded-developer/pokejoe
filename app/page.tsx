@@ -75,7 +75,7 @@ export default function HomePage() {
 
   return (
     <>
-      <Navbar loggedInUser={loggedInUser} onLogout={handleLogout} />
+      <Navbar loggedInUser={loggedInUser ?? undefined} onLogout={handleLogout} />
 
       {/* HERO */}
       <section style={{ background: 'var(--black)', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', overflow: 'hidden', paddingTop: 'var(--nav-h)' }}>
