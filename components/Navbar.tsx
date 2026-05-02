@@ -41,7 +41,7 @@ export default function Navbar({ loggedInUser: propUser, onLogout: propLogout }:
     if (!loggedInUser) { setPoints(null); return; }
     getCustomer(loggedInUser).then(data => {
       if (data && typeof (data as { points?: number }).points === 'number') {
-        setPoints((data as { points: number }).points);
+         setPoints((data as unknown as { points: number }).points);
       }
     }).catch(() => {});
   }, [loggedInUser]);
