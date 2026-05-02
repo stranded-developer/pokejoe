@@ -328,12 +328,12 @@ export default function HomePage() {
     align-items: stretch;
   }
           .hero-content {
-            padding: 24px 20px 0;
+            padding: 18px 20px 0;
             max-width: none;
           }
           .hero-login-card {
             width: auto;
-            margin: 16px 20px 0;  /* reduce top margin */
+            margin: 10px 20px 0;  /* reduce top margin */
           }
         }
       `}</style>
