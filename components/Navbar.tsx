@@ -65,9 +65,11 @@ export default function Navbar({ loggedInUser: propUser, onLogout: propLogout }:
     }).catch(() => {});
   }, [loggedInUser]);
 
+  // ── CHANGE 1: REDEEM is no longer `highlight: true` — same plain style as CATALOG and MY VAULT ──
   const links = [
     { href: '/', label: 'HOME' },
     { href: '/catalog', label: 'CATALOG' },
+    { href: '/redeem', label: 'REDEEM' },   // <-- removed highlight
     { href: '/vault', label: 'MY VAULT' },
   ];
 
@@ -83,12 +85,15 @@ export default function Navbar({ loggedInUser: propUser, onLogout: propLogout }:
           POKE<span style={{ color: 'var(--gold)' }}>JOE</span>
         </Link>
 
-        {/* Desktop links */}
-        <div className="nav-desktop-links" style={{ display: 'flex', gap: 28, flex: 1 }}>
+        {/* Desktop links — all plain, active = gold */}
+        <div className="nav-desktop-links" style={{ display: 'flex', gap: 24, flex: 1, alignItems: 'center' }}>
           {links.map(l => (
             <Link key={l.href} href={l.href} style={{
-              fontSize: 13, color: pathname === l.href ? 'var(--gold)' : 'rgba(0,0,0,0.45)',
-              textDecoration: 'none', letterSpacing: '0.04em', fontWeight: 500,
+              fontSize: 13,
+              color: pathname === l.href ? 'var(--gold)' : 'rgba(0,0,0,0.45)',
+              textDecoration: 'none',
+              letterSpacing: '0.04em',
+              fontWeight: 500,
             }}>{l.label}</Link>
           ))}
         </div>
@@ -111,22 +116,12 @@ export default function Navbar({ loggedInUser: propUser, onLogout: propLogout }:
                 background: 'rgba(212,160,23,0.08)', border: '1px solid rgba(212,160,23,0.25)',
                 borderRadius: 8, textDecoration: 'none', overflow: 'hidden',
               }}>
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: 6,
-                  padding: '7px 12px',
-                  color: 'var(--gold)', fontSize: 12, fontWeight: 600, letterSpacing: '0.04em',
-                }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', color: 'var(--gold)', fontSize: 12, fontWeight: 600, letterSpacing: '0.04em' }}>
                   <span style={{ fontSize: 13 }}>⭐</span>
                   <span>@{loggedInUser}</span>
                 </div>
                 <div style={{ width: 1, height: 20, background: 'rgba(212,160,23,0.3)', flexShrink: 0 }} />
-                <div style={{
-                  padding: '7px 12px',
-                  background: 'rgba(212,160,23,0.14)',
-                  color: 'var(--gold)', fontSize: 12, fontWeight: 700,
-                  fontFamily: 'var(--ff-mono)',
-                  whiteSpace: 'nowrap',
-                }}>
+                <div style={{ padding: '7px 12px', background: 'rgba(212,160,23,0.14)', color: 'var(--gold)', fontSize: 12, fontWeight: 700, fontFamily: 'var(--ff-mono)', whiteSpace: 'nowrap' }}>
                   {points === null ? '…' : `${points} pts`}
                 </div>
               </Link>
@@ -165,7 +160,8 @@ export default function Navbar({ loggedInUser: propUser, onLogout: propLogout }:
         }}>
           {links.map(l => (
             <Link key={l.href} href={l.href} onClick={() => setMenuOpen(false)} style={{
-              fontSize: 15, color: pathname === l.href ? 'var(--gold)' : 'var(--black)',
+              fontSize: 15,
+              color: pathname === l.href ? 'var(--gold)' : 'var(--black)',
               textDecoration: 'none', letterSpacing: '0.04em', fontWeight: 500,
               padding: '10px 0', borderBottom: '1px solid rgba(0,0,0,0.05)',
             }}>{l.label}</Link>
