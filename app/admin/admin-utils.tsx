@@ -8,7 +8,7 @@ export type Customer = {
   joinedAt?: { seconds: number } | string;
   purchaseHistory?: Array<{ description: string; amount: number; points: number; date: string; type?: string }>;
 };
-export type Tab = 'customers' | 'vault' | 'vaultviewer' | 'points' | 'products' | 'rewards';
+export type Tab = 'customers' | 'vault' | 'vaultviewer' | 'points' | 'products' | 'rewards' | 'psa';
 export type ProdItem = { id: string; name: string; series?: string; price: number; stock?: number; emoji?: string; imageUrl?: string; description?: string; badge?: string; cardsPerPack?: number; language?: string; };
 export type RewardItem = { id: string; name: string; category?: string; pointsCost: number; stock?: number; emoji?: string; imageUrl?: string; description?: string; badge?: string; cardsPerPack?: number; language?: string; };
 export type VaultItem = { id: string; type?: string; status?: string; addedAt?: { seconds: number }; liveTitle?: string; packs?: string[]; photos?: string[]; productName?: string; productId?: string; price?: number; quantity?: number; totalPrice?: number; pointsCost?: number; description?: string; imageUrl?: string; };

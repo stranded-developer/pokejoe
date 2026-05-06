@@ -188,9 +188,9 @@ export default function VaultPage() {
 
         {/* Tabs */}
         <div className="vault-tabs">
-          {(['points','items','redeem'] as const).map(tab => (
+          {(['points','items','psa','redeem'] as const).map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)} style={{ height:52, display:'flex', alignItems:'center', fontSize:13, cursor:'pointer', background:'none', border:'none', borderBottom:activeTab===tab?'2px solid var(--gold)':'2px solid transparent', color:activeTab===tab?'var(--black)':'#8892A8', fontWeight:activeTab===tab?500:400, padding:'0 4px', transition:'all 0.2s', whiteSpace:'nowrap' }}>
-              {tab==='points'?'Points & History':tab==='items'?'My Vault Items':'Redeem Points'}
+              {tab==='points'?'Points & History':tab==='items'?'My Vault Items':tab==='psa'?'PSA Grading':'Redeem Points'}
             </button>
           ))}
         </div>
@@ -379,6 +379,56 @@ export default function VaultPage() {
                 </div>
               );
             })}
+          </div>
+        )}
+
+                {/* ── PSA GRADING TAB ── */}
+        {activeTab==='psa' && (
+          <div className="vault-content">
+            {vaultItems.filter(i => i.type === 'psa').length === 0 ? (
+              <div style={{ background:'white', border:'1px solid #E4E8F0', borderRadius:8, padding:32, textAlign:'center', color:'#8892A8', fontSize:14 }}>
+                No PSA grading submissions yet. Contact PokeJoe to submit cards for grading. 🏆
+              </div>
+            ) : vaultItems.filter(i => i.type === 'psa').map(item => (
+              <div key={item.id} style={{ background:'white', border:'1px solid #E4E8F0', borderRadius:12, overflow:'hidden', marginBottom:16 }}>
+                {/* Header bar */}
+                <div style={{ background:'linear-gradient(90deg,rgba(212,160,23,0.12),rgba(212,160,23,0.03))', borderBottom:'1px solid rgba(212,160,23,0.15)', padding:'10px 16px', display:'flex', alignItems:'center', gap:10, flexWrap:'wrap' }}>
+                  <span style={{ fontSize:15 }}>🏆</span>
+                  <span style={{ fontSize:12, fontWeight:700, color:'#B8860B', letterSpacing:'0.06em', textTransform:'uppercase' }}>PSA Grading</span>
+                  <span style={{ fontSize:12, color:'rgba(0,0,0,0.4)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }}>{item.liveTitle}</span>
+                  <div style={{ flexShrink:0 }}>
+                    <StatusBadge status={item.status} />
+                  </div>
+                </div>
+                {/* Body */}
+                <div style={{ padding:20 }}>
+                  <div style={{ fontSize:11, letterSpacing:'0.1em', textTransform:'uppercase', color:'#8892A8', fontWeight:600, marginBottom:12 }}>Cards Submitted</div>
+                  {item.packs?.map((card, i) => (
+                    <div key={i} style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 14px', background:'#F8F9FC', borderRadius:8, marginBottom:6 }}>
+                      <span style={{ fontSize:18 }}>🃏</span>
+                      <span style={{ fontSize:14, fontWeight:500, color:'var(--black)', flex:1 }}>{card}</span>
+                    </div>
+                  ))}
+
+                  {item.photos && item.photos.length > 0 && (
+                    <div style={{ marginTop:20 }}>
+                      <div style={{ fontSize:11, letterSpacing:'0.1em', textTransform:'uppercase', color:'#8892A8', fontWeight:600, marginBottom:12 }}>Photos</div>
+                      <div className="vault-photo-grid">
+                        {item.photos.map((url, i) => (
+                          <img key={i} src={url} alt="psa" style={{ width:'100%', aspectRatio:'1', objectFit:'cover', borderRadius:8, border:'1px solid #E4E8F0' }} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {item.addedAt && (
+                    <div style={{ marginTop:16, fontSize:11, color:'#B0B8CC', fontFamily:'var(--ff-mono)' }}>Submitted {formatTs(item.addedAt)}</div>
+                  )}
+                </div>
+                {/* Status footer */}
+                <StatusFooter status={item.status} waNumber={waNumber} />
+              </div>
+            ))}
           </div>
         )}
 

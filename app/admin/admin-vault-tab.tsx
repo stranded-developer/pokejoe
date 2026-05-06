@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { getDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { addVaultItem, addVaultItemFromProduct, getVaultItems, updateVaultItemStatus, deleteVaultItem } from '@/lib/db';
+import { addPsaGradingItem, addVaultItem, addVaultItemFromProduct, getVaultItems, updateVaultItemStatus, deleteVaultItem } from '@/lib/db';
 import type { Customer, ProdItem, VaultItem } from './admin-utils';
 import { stockBadge, STATUS_OPTIONS, statusStyle, inp, lbl, btn, sectionCard, sectionTitle, sectionSub, PhotoDropZone } from './admin-utils';
 
@@ -14,14 +14,12 @@ export function VaultTab({ customers, products, showToast, loadCustomers, loadPr
   showToast: (m: string) => void; loadCustomers: () => void;
   loadProducts: () => void; uploadPhoto: (f: File, folder: string) => Promise<string>;
 }) {
-  // Section A — live session
   const [vaultUser, setVaultUser] = useState('');
   const [vaultTitle, setVaultTitle] = useState('');
   const [vaultPacks, setVaultPacks] = useState('');
   const [vaultStatus, setVaultStatus] = useState<string>('On progress');
   const [vaultPhotos, setVaultPhotos] = useState<Array<{ file: File; preview: string; uploading: boolean }>>([]);
 
-  // Section B — product purchase
   const [purchaseUser, setPurchaseUser] = useState('');
   const [purchaseProductId, setPurchaseProductId] = useState('');
   const [purchaseQty, setPurchaseQty] = useState(1);
@@ -184,7 +182,7 @@ export function VaultViewerTab({ customers, showToast }: {
   const [loadingItems, setLoadingItems] = useState(false);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [filterType, setFilterType] = useState<'all' | 'live' | 'purchase' | 'redemption'>('all');
+  const [filterType, setFilterType] = useState<'all' | 'live' | 'purchase' | 'redemption' | 'psa'>('all');
 
   async function loadItems(username: string) {
     if (!username) { setItems([]); return; }
@@ -217,12 +215,17 @@ export function VaultViewerTab({ customers, showToast }: {
     } catch { showToast('❌ Failed to delete item'); }
   }
 
-  const filtered = items.filter(i => filterType === 'all' || i.type === filterType || (!i.type && filterType === 'live'));
+  const filtered = items.filter(i =>
+    filterType === 'all' ||
+    i.type === filterType ||
+    (!i.type && filterType === 'live')
+  );
   const selectedCustomer = customers.find(c => c.id === selectedUser);
 
   function typeLabel(type?: string) {
-    if (type === 'purchase')   return { icon: '🛒', label: 'Purchase', color: '#7E9FF5', bg: 'rgba(39,81,163,0.15)' };
-    if (type === 'redemption') return { icon: '⭐', label: 'Redeemed', color: 'var(--gold)', bg: 'rgba(212,160,23,0.12)' };
+    if (type === 'purchase')   return { icon: '🛒', label: 'Purchase',     color: '#7E9FF5', bg: 'rgba(39,81,163,0.15)' };
+    if (type === 'redemption') return { icon: '⭐', label: 'Redeemed',     color: 'var(--gold)', bg: 'rgba(212,160,23,0.12)' };
+    if (type === 'psa')        return { icon: '🏆', label: 'PSA Grading',  color: '#B8860B', bg: 'rgba(212,160,23,0.12)' };
     return                            { icon: '📡', label: 'Live Session', color: '#22C55E', bg: 'rgba(34,197,94,0.1)' };
   }
 
@@ -256,7 +259,13 @@ export function VaultViewerTab({ customers, showToast }: {
       {selectedUser && (
         <>
           <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
-            {([['all', 'All Items'], ['live', '📡 Live'], ['purchase', '🛒 Purchases'], ['redemption', '⭐ Redeemed']] as const).map(([val, label]) => (
+            {([
+              ['all',        'All Items'],
+              ['live',       '📡 Live'],
+              ['purchase',   '🛒 Purchases'],
+              ['redemption', '⭐ Redeemed'],
+              ['psa',        '🏆 PSA'],
+            ] as const).map(([val, label]) => (
               <button key={val} onClick={() => setFilterType(val as typeof filterType)}
                 style={{ padding: '7px 14px', borderRadius: 20, border: filterType === val ? '1px solid var(--gold)' : '1px solid rgba(255,255,255,0.1)', background: filterType === val ? 'rgba(212,160,23,0.12)' : 'transparent', color: filterType === val ? 'var(--gold)' : 'rgba(255,255,255,0.4)', fontSize: 12, cursor: 'pointer', fontWeight: filterType === val ? 600 : 400 }}>
                 {label} {val === 'all' ? `(${items.length})` : `(${items.filter(i => i.type === val || (!i.type && val === 'live')).length})`}
@@ -292,9 +301,13 @@ export function VaultViewerTab({ customers, showToast }: {
                     <div style={{ padding: '14px 16px' }}>
                       {item.packs && item.packs.length > 0 && (
                         <div style={{ marginBottom: 12 }}>
-                          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Packs / Items</div>
+                          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
+                            {item.type === 'psa' ? 'Cards Submitted' : 'Packs / Items'}
+                          </div>
                           {item.packs.map((pack, i) => (
-                            <div key={i} style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', padding: '5px 10px', background: 'rgba(255,255,255,0.04)', borderRadius: 6, marginBottom: 4 }}>📦 {pack}</div>
+                            <div key={i} style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', padding: '5px 10px', background: 'rgba(255,255,255,0.04)', borderRadius: 6, marginBottom: 4 }}>
+                              {item.type === 'psa' ? '🃏' : '📦'} {pack}
+                            </div>
                           ))}
                         </div>
                       )}
@@ -378,5 +391,91 @@ function StatusPicker({ value, onChange }: { value: string; onChange: (v: string
         );
       })}
     </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// PSA GRADING TAB
+// ═══════════════════════════════════════════════════════════════════
+export function PsaGradingTab({ customers, showToast, uploadPhoto }: {
+  customers: Customer[];
+  showToast: (m: string) => void;
+  uploadPhoto: (f: File, folder: string) => Promise<string>;
+}) {
+  const [psaUser, setPsaUser] = useState('');
+  const [psaTitle, setPsaTitle] = useState('');
+  const [psaPacks, setPsaPacks] = useState('');
+  const [psaStatus, setPsaStatus] = useState<string>('On progress');
+  const [psaPhotos, setPsaPhotos] = useState<Array<{ file: File; preview: string; uploading: boolean }>>([]);
+  const [loading, setLoading] = useState(false);
+
+  return (
+    <>
+      <div style={{ marginBottom: 28 }}>
+        <div style={{ fontFamily: 'var(--ff-display)', fontSize: 'clamp(24px,5vw,32px)', color: 'white', letterSpacing: '0.04em' }}>PSA GRADING</div>
+        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>Add PSA grading submissions to a customer&apos;s vault</div>
+      </div>
+
+      <div style={sectionCard}>
+        <div style={sectionTitle}>🏆 PSA Grading Submission</div>
+        <div style={sectionSub}>Log a customer&apos;s cards submitted for PSA grading. Stored in vault with type &quot;psa&quot;.</div>
+
+        <label style={lbl}>Customer Username</label>
+        <select value={psaUser} onChange={e => setPsaUser(e.target.value)} style={inp}>
+          <option value="">— select customer —</option>
+          {customers.map(c => (
+            <option key={c.id} value={c.id}>{c.id} ({c.firstName} {c.lastName})</option>
+          ))}
+        </select>
+
+        <label style={lbl}>Submission Title</label>
+        <input
+          placeholder="PSA Submission — Batch #3 May 2026"
+          value={psaTitle}
+          onChange={e => setPsaTitle(e.target.value)}
+          style={inp}
+        />
+
+        <label style={lbl}>Cards Submitted (one per line)</label>
+        <textarea
+          placeholder={'Charizard ex SAR 221/165\nPikachu VMAX Rainbow Rare\nMewtwo ex Full Art'}
+          value={psaPacks}
+          onChange={e => setPsaPacks(e.target.value)}
+          rows={4}
+          style={{ ...inp, resize: 'vertical', lineHeight: 1.6 }}
+        />
+
+        <label style={lbl}>Status</label>
+        <StatusPicker value={psaStatus} onChange={setPsaStatus} />
+
+        <label style={lbl}>Photos (optional)</label>
+        <PhotoDropZone id="psa-photos" photos={psaPhotos} setPhotos={setPsaPhotos} />
+
+        <button
+          disabled={loading || !psaUser || !psaTitle || !psaPacks}
+          onClick={async () => {
+            if (!psaUser || !psaTitle || !psaPacks) { showToast('⚠️ Fill in all required fields'); return; }
+            setLoading(true);
+            try {
+              let photoUrls: string[] = [];
+              if (psaPhotos.length > 0) {
+                setPsaPhotos(prev => prev.map(p => ({ ...p, uploading: true })));
+                photoUrls = await Promise.all(psaPhotos.map(p => uploadPhoto(p.file, `psa/${psaUser.toLowerCase()}`)));
+              }
+              const cards = psaPacks.split('\n').map(s => s.trim()).filter(Boolean);
+              await addPsaGradingItem(psaUser, { liveTitle: psaTitle, packs: cards, photos: photoUrls, status: psaStatus });
+              showToast(`✓ PSA submission added to @${psaUser}`);
+              setPsaUser(''); setPsaTitle(''); setPsaPacks(''); setPsaPhotos([]); setPsaStatus('On progress');
+            } catch (e: unknown) {
+              showToast('❌ ' + (e instanceof Error ? e.message : 'Error'));
+            }
+            setLoading(false);
+          }}
+          style={{ ...btn, opacity: loading || !psaUser || !psaTitle || !psaPacks ? 0.5 : 1, cursor: loading || !psaUser || !psaTitle || !psaPacks ? 'not-allowed' : 'pointer' }}
+        >
+          {loading ? 'Adding...' : '🏆 Add PSA Submission to Vault →'}
+        </button>
+      </div>
+    </>
   );
 }

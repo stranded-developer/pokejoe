@@ -107,6 +107,21 @@ export async function addVaultItem(username: string, item: {
   await addDoc(ref, { ...item, status: item.status || 'On progress', addedAt: serverTimestamp() });
 }
 
+export async function addPsaGradingItem(username: string, item: {
+  liveTitle: string;
+  packs: string[];
+  photos: string[];
+  status?: string;
+}) {
+  const ref = collection(db, 'vault', username.toLowerCase(), 'items');
+  await addDoc(ref, {
+    ...item,
+    type: 'psa',
+    status: item.status || 'On progress',
+    addedAt: serverTimestamp(),
+  });
+}
+
 // ── CHANGE 2: addVaultItemFromProduct — admin picks from products (not rewards),
 //    decrements product stock, and optionally awards loyalty points ──
 export async function addVaultItemFromProduct(

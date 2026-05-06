@@ -6,13 +6,14 @@ import {
   setVaultActive, addRedeemedVaultItem, getRedeemableProducts,
   addPointsManual, deductPoints,
 } from '@/lib/db';
-import { VaultTab, VaultViewerTab } from './admin-vault-tab';
+import { VaultTab, VaultViewerTab, PsaGradingTab } from './admin-vault-tab';
 import { ProductsTab, RewardsTab } from './admin-catalog-tab';
 import {
   Customer, Tab, ProdItem, RewardItem,
   generateUsername, stockBadge,
   inp, lbl, btn, sectionCard, sectionTitle, sectionSub,
 } from './admin-utils';
+
 
 const ADMIN_SESSION_KEY = 'pokejoe_admin_authed';
 
@@ -93,9 +94,11 @@ export default function AdminPage() {
     { key: 'customers',   icon: '👥', label: 'Customers',    sub: 'Accounts & profiles' },
     { key: 'vault',       icon: '📦', label: 'Vault',        sub: 'Add items & purchases' },
     { key: 'vaultviewer', icon: '🔍', label: 'Vault Viewer', sub: 'View & manage items' },
+    { key: 'psa', icon: '🏆', label: 'PSA Grading', sub: 'Grading submissions' },
     { key: 'points',      icon: '⭐', label: 'Points',       sub: 'Add, deduct & redeem' },
     { key: 'products',    icon: '🃏', label: 'Products',     sub: 'Catalog management' },
     { key: 'rewards',     icon: '🏆', label: 'Rewards',      sub: 'Redeemable items' },
+    
   ];
 
   const filteredCustomers = customers.filter(c => {
@@ -150,6 +153,7 @@ export default function AdminPage() {
           {tab === 'points'      && <PointsTab customers={customers} rewards={rewards} showToast={showToast} loadCustomers={loadCustomers} loadRewards={loadRewards} addRedeemedVaultItem={addRedeemedVaultItem} />}
           {tab === 'products'    && <ProductsTab products={products} showToast={showToast} loadProducts={loadProducts} uploadPhoto={uploadPhoto} />}
           {tab === 'rewards'     && <RewardsTab rewards={rewards} showToast={showToast} loadRewards={loadRewards} uploadPhoto={uploadPhoto} />}
+          {tab === 'psa'         && <PsaGradingTab customers={customers} showToast={showToast} uploadPhoto={uploadPhoto} />}
         </div>
       </div>
 
