@@ -2,8 +2,8 @@
 import { useState } from 'react';
 import { db } from '@/lib/firebase';
 import { upsertProduct, upsertRedeemableProduct, deleteRedeemableProduct } from '@/lib/db';
-import type { ProdItem, RewardItem } from './page';
-import { stockBadge, inp, lbl, btn, sectionCard, sectionTitle, sectionSub, PhotoDropZone } from './page';
+import type { ProdItem, RewardItem } from './admin-utils';
+import { stockBadge, inp, lbl, btn, sectionCard, sectionTitle, sectionSub, PhotoDropZone } from './admin-utils';
 
 // ═══════════════════════════════════════════════════════════════════
 // PRODUCTS TAB

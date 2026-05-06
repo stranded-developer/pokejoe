@@ -1,10 +1,10 @@
 'use client';
 import { useState } from 'react';
-import { getDoc, doc, getDocs, collection } from 'firebase/firestore';
+import { getDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { addVaultItem, addVaultItemFromProduct, getVaultItems, updateVaultItemStatus, deleteVaultItem } from '@/lib/db';
-import type { Customer, ProdItem, VaultItem } from './page';
-import { stockBadge, STATUS_OPTIONS, statusStyle, inp, lbl, btn, sectionCard, sectionTitle, sectionSub, PhotoDropZone } from './page';
+import type { Customer, ProdItem, VaultItem } from './admin-utils';
+import { stockBadge, STATUS_OPTIONS, statusStyle, inp, lbl, btn, sectionCard, sectionTitle, sectionSub, PhotoDropZone } from './admin-utils';
 
 // ═══════════════════════════════════════════════════════════════════
 // VAULT TAB — Add items (live session + product purchase)
@@ -233,7 +233,6 @@ export function VaultViewerTab({ customers, showToast }: {
         <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>View and manage vault items for any customer</div>
       </div>
 
-      {/* Customer picker */}
       <div style={sectionCard}>
         <div style={sectionTitle}>👤 Select Customer</div>
         <div style={{ ...sectionSub, marginBottom: 12 }}>Choose a customer to view their vault contents</div>
@@ -254,10 +253,8 @@ export function VaultViewerTab({ customers, showToast }: {
         </div>
       </div>
 
-      {/* Items list */}
       {selectedUser && (
         <>
-          {/* Filter tabs */}
           <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
             {([['all', 'All Items'], ['live', '📡 Live'], ['purchase', '🛒 Purchases'], ['redemption', '⭐ Redeemed']] as const).map(([val, label]) => (
               <button key={val} onClick={() => setFilterType(val as typeof filterType)}
@@ -283,22 +280,16 @@ export function VaultViewerTab({ customers, showToast }: {
 
                 return (
                   <div key={item.id} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, overflow: 'hidden' }}>
-                    {/* Item header */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)', flexWrap: 'wrap' }}>
-                      {/* Type badge */}
                       <span style={{ fontSize: 11, fontWeight: 600, color: tl.color, background: tl.bg, padding: '3px 10px', borderRadius: 20, whiteSpace: 'nowrap' }}>{tl.icon} {tl.label}</span>
-                      {/* Title */}
                       <div style={{ flex: 1, fontSize: 13, color: 'white', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {item.liveTitle || item.productName || '—'}
                         {item.quantity && item.quantity > 1 && <span style={{ color: 'rgba(255,255,255,0.4)', fontWeight: 400 }}> ×{item.quantity}</span>}
                       </div>
-                      {/* Date */}
                       {item.addedAt && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', whiteSpace: 'nowrap', flexShrink: 0 }}>{new Date(item.addedAt.seconds * 1000).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</div>}
                     </div>
 
-                    {/* Item body */}
                     <div style={{ padding: '14px 16px' }}>
-                      {/* Live session packs */}
                       {item.packs && item.packs.length > 0 && (
                         <div style={{ marginBottom: 12 }}>
                           <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Packs / Items</div>
@@ -308,7 +299,6 @@ export function VaultViewerTab({ customers, showToast }: {
                         </div>
                       )}
 
-                      {/* Purchase / redemption info */}
                       {(item.type === 'purchase' || item.type === 'redemption') && (
                         <div style={{ display: 'flex', gap: 16, marginBottom: 12, flexWrap: 'wrap' }}>
                           {item.imageUrl && <img src={item.imageUrl} alt="" style={{ width: 56, height: 56, borderRadius: 8, objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)', flexShrink: 0 }} />}
@@ -322,7 +312,6 @@ export function VaultViewerTab({ customers, showToast }: {
                         </div>
                       )}
 
-                      {/* Photos */}
                       {item.photos && item.photos.length > 0 && (
                         <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
                           {item.photos.map((url, i) => (
@@ -331,14 +320,10 @@ export function VaultViewerTab({ customers, showToast }: {
                         </div>
                       )}
 
-                      {/* Status + actions row */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                        {/* Current status badge */}
                         <div style={{ fontSize: 11, fontWeight: 600, color: ss.color, background: ss.bg, border: `1px solid ${ss.border}`, padding: '4px 12px', borderRadius: 20 }}>
                           {item.status || 'On progress'}
                         </div>
-
-                        {/* Status change buttons */}
                         {STATUS_OPTIONS.filter(s => s !== (item.status || 'On progress')).map(s => {
                           const st = statusStyle(s);
                           return (
@@ -348,10 +333,7 @@ export function VaultViewerTab({ customers, showToast }: {
                             </button>
                           );
                         })}
-
                         <div style={{ flex: 1 }} />
-
-                        {/* Delete */}
                         {isDeleting ? (
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                             <span style={{ fontSize: 11, color: '#FF6B75' }}>Delete?</span>
