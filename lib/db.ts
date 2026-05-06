@@ -86,13 +86,25 @@ export async function getVaultItems(username: string) {
   return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 
+export async function updateVaultItemStatus(username: string, itemId: string, status: string) {
+  const ref = doc(db, 'vault', username.toLowerCase(), 'items', itemId);
+  await updateDoc(ref, { status });
+}
+
+export async function deleteVaultItem(username: string, itemId: string) {
+  const { deleteDoc } = await import('firebase/firestore');
+  const ref = doc(db, 'vault', username.toLowerCase(), 'items', itemId);
+  await deleteDoc(ref);
+}
+
 export async function addVaultItem(username: string, item: {
   liveTitle: string;
   packs: string[];
   photos: string[];
+  status?: string;
 }) {
   const ref = collection(db, 'vault', username.toLowerCase(), 'items');
-  await addDoc(ref, { ...item, addedAt: serverTimestamp() });
+  await addDoc(ref, { ...item, status: item.status || 'On progress', addedAt: serverTimestamp() });
 }
 
 // ── CHANGE 2: addVaultItemFromProduct — admin picks from products (not rewards),
@@ -102,11 +114,12 @@ export async function addVaultItemFromProduct(
   item: {
     productId: string;
     productName: string;
-    price: number;         // purchase price in IDR
+    price: number;
     quantity: number;
     description?: string;
     imageUrl?: string;
-    autoAddPoints: boolean; // if true, award 1 pt per Rp 100,000 spent
+    autoAddPoints: boolean;
+    status?: string;
   }
 ) {
   const qty = item.quantity ?? 1;
@@ -146,6 +159,7 @@ export async function addVaultItemFromProduct(
     totalPrice,
     description: item.description || '',
     imageUrl: item.imageUrl || '',
+    status: item.status || 'On progress',
     addedAt: serverTimestamp(),
   });
 }
@@ -159,6 +173,7 @@ export async function addRedeemedVaultItem(
     description?: string;
     imageUrl?: string;
     redeemableProductId?: string;
+    status?: string;
   }
 ) {
   const qty = item.quantity ?? 1;
@@ -175,6 +190,7 @@ export async function addRedeemedVaultItem(
     quantity: qty,
     description: item.description || '',
     imageUrl: item.imageUrl || '',
+    status: item.status || 'On progress',
     addedAt: serverTimestamp(),
   });
 }

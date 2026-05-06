@@ -7,8 +7,7 @@ import { getRedeemableProduct } from '@/lib/db';
 import { getDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
-type RedeemProduct = { id:string; name:string; category?:string; pointsCost:number; stock?:number; emoji?:string; imageUrl?:string; images?:string[]; description?:string; language?:string; badge?:string; };
-
+type RedeemProduct = { id:string; name:string; category?:string; pointsCost:number; stock?:number; emoji?:string; imageUrl?:string; images?:string[]; description?:string; language?:string; badge?:string; cardsPerPack?:number; };
 const FALLBACK: Record<string,RedeemProduct> = {
   'r1': { id:'r1', name:'PSA Graded Slab',         category:'Grading Service', pointsCost:50, emoji:'🏆', description:'Submit your pulled card for professional PSA grading. Includes slabbing, authentication, and grading. Final grade may vary based on card condition.' },
   'r2': { id:'r2', name:'Charizard ex Premium Box', category:'Sealed Product',  pointsCost:30, emoji:'🔥', description:'Premium collection box featuring the iconic Charizard ex with exclusive promo cards and booster packs.' },
