@@ -17,8 +17,8 @@ type Customer = {
   purchaseHistory?: Array<{ description: string; amount: number; points: number; date: string; type?: string }>;
 };
 type Tab = 'customers' | 'vault' | 'points' | 'products' | 'rewards';
-type ProdItem = { id: string; name: string; series?: string; price: number; stock?: number; emoji?: string; imageUrl?: string; description?: string; badge?: string; };
-type RewardItem = { id: string; name: string; category?: string; pointsCost: number; stock?: number; emoji?: string; imageUrl?: string; description?: string; badge?: string; };
+type ProdItem = { id: string; name: string; series?: string; price: number; stock?: number; emoji?: string; imageUrl?: string; description?: string; badge?: string; cardsPerPack?: number; language?: string; };
+type RewardItem = { id: string; name: string; category?: string; pointsCost: number; stock?: number; emoji?: string; imageUrl?: string; description?: string; badge?: string; cardsPerPack?: number; language?: string; };
 
 const ADMIN_SESSION_KEY = 'pokejoe_admin_authed';
 
@@ -1072,6 +1072,8 @@ function ProductsTab({ products, showToast, loadProducts, uploadPhoto }: {
   const [prodDesc, setProdDesc] = useState('');
   const [prodEmoji, setProdEmoji] = useState('📦');
   const [prodBadge, setProdBadge] = useState('');
+  const [prodCardsPerPack, setProdCardsPerPack] = useState('');
+  const [prodLanguage, setProdLanguage] = useState('');
   const [prodPhotos, setProdPhotos] = useState<Array<{ file: File; preview: string; uploading: boolean }>>([]);
   const [editingProd, setEditingProd] = useState<string | null>(null);
   const [deletingProd, setDeletingProd] = useState<string | null>(null);
@@ -1081,6 +1083,8 @@ function ProductsTab({ products, showToast, loadProducts, uploadPhoto }: {
   const [editProdStock, setEditProdStock] = useState('');
   const [editProdDesc, setEditProdDesc] = useState('');
   const [editProdBadge, setEditProdBadge] = useState('');
+  const [editProdCardsPerPack, setEditProdCardsPerPack] = useState('');
+  const [editProdLanguage, setEditProdLanguage] = useState('');
   const [editProdPhoto, setEditProdPhoto] = useState<{ file: File; preview: string; uploading: boolean } | null>(null);
 
   return (
@@ -1127,6 +1131,21 @@ function ProductsTab({ products, showToast, loadProducts, uploadPhoto }: {
               <option value="SALE">SALE</option>
             </select>
           </div>
+          <div>
+            <label style={lbl}>Cards Per Pack</label>
+            <input type="number" placeholder="10" value={prodCardsPerPack} onChange={e => setProdCardsPerPack(e.target.value)} style={{ ...inp, marginBottom: 0 }} />
+          </div>
+          <div>
+            <label style={lbl}>Language</label>
+            <select value={prodLanguage} onChange={e => setProdLanguage(e.target.value)} style={{ ...inp, marginBottom: 0 }}>
+              <option value="">English</option>
+              <option value="English">English</option>
+              <option value="Japanese">Japanese</option>
+              <option value="Indonesian">Indonesian</option>
+              <option value="Korean">Korean</option>
+              <option value="Chinese">Chinese</option>
+            </select>
+          </div>
         </div>
         <label style={lbl}>Description</label>
         <textarea placeholder="Product description..." value={prodDesc} onChange={e => setProdDesc(e.target.value)} rows={3} style={{ ...inp, resize: 'vertical' }} />
@@ -1139,9 +1158,9 @@ function ProductsTab({ products, showToast, loadProducts, uploadPhoto }: {
             setProdPhotos(prev => prev.map(p => ({ ...p, uploading: true })));
             imageUrl = await uploadPhoto(prodPhotos[0].file, 'products');
           }
-          await upsertProduct(null, { name: prodName, series: prodSeries, price: parseFloat(prodPrice), stock: parseInt(prodStock) || 0, description: prodDesc, emoji: prodEmoji, badge: prodBadge || null, ...(imageUrl && { imageUrl }) });
+          await upsertProduct(null, { name: prodName, series: prodSeries, price: parseFloat(prodPrice), stock: parseInt(prodStock) || 0, description: prodDesc, emoji: prodEmoji, badge: prodBadge || null, cardsPerPack: parseInt(prodCardsPerPack) || null, language: prodLanguage || 'English', ...(imageUrl && { imageUrl }) });
           showToast(`✓ "${prodName}" added`);
-          setProdName(''); setProdSeries(''); setProdPrice(''); setProdStock(''); setProdDesc(''); setProdEmoji('📦'); setProdBadge(''); setProdPhotos([]);
+          setProdName(''); setProdSeries(''); setProdPrice(''); setProdStock(''); setProdDesc(''); setProdEmoji('📦'); setProdBadge(''); setProdCardsPerPack(''); setProdLanguage(''); setProdPhotos([]);
           loadProducts();
         }} style={btn}>Add Product →</button>
       </div>
@@ -1162,6 +1181,17 @@ function ProductsTab({ products, showToast, loadProducts, uploadPhoto }: {
                       <div><label style={lbl}>Series</label><input value={editProdSeries} onChange={e => setEditProdSeries(e.target.value)} style={{ ...inp, marginBottom: 0 }} /></div>
                       <div><label style={lbl}>Price (Rp)</label><input type="number" value={editProdPrice} onChange={e => setEditProdPrice(e.target.value)} style={{ ...inp, marginBottom: 0 }} /></div>
                       <div><label style={lbl}>Stock</label><input type="number" value={editProdStock} onChange={e => setEditProdStock(e.target.value)} style={{ ...inp, marginBottom: 0 }} /></div>
+                      <div><label style={lbl}>Cards Per Pack</label><input type="number" value={editProdCardsPerPack} onChange={e => setEditProdCardsPerPack(e.target.value)} style={{ ...inp, marginBottom: 0 }} /></div>
+                      <div>
+                        <label style={lbl}>Language</label>
+                        <select value={editProdLanguage} onChange={e => setEditProdLanguage(e.target.value)} style={{ ...inp, marginBottom: 0 }}>
+                          <option value="English">English</option>
+                          <option value="Japanese">Japanese</option>
+                          <option value="Indonesian">Indonesian</option>
+                          <option value="Korean">Korean</option>
+                          <option value="Chinese">Chinese</option>
+                        </select>
+                      </div>
                     </div>
                     <label style={lbl}>Badge</label>
                     <select value={editProdBadge} onChange={e => setEditProdBadge(e.target.value)} style={{ ...inp, width: 120 }}>
@@ -1192,7 +1222,7 @@ function ProductsTab({ products, showToast, loadProducts, uploadPhoto }: {
                           if (p.imageUrl) { try { const { ref, deleteObject } = await import('firebase/storage'); const { storage } = await import('@/lib/firebase'); await deleteObject(ref(storage, p.imageUrl)); } catch { } }
                           imageUrl = await uploadPhoto(editProdPhoto.file, 'products');
                         }
-                        await upsertProduct(p.id, { name: editProdName, series: editProdSeries, price: parseFloat(editProdPrice), stock: parseInt(editProdStock) || 0, description: editProdDesc, badge: editProdBadge || null, imageUrl });
+                        await upsertProduct(p.id, { name: editProdName, series: editProdSeries, price: parseFloat(editProdPrice), stock: parseInt(editProdStock) || 0, description: editProdDesc, badge: editProdBadge || null, cardsPerPack: parseInt(editProdCardsPerPack) || null, language: editProdLanguage || 'English', imageUrl });
                         showToast(`✓ "${editProdName}" updated`); setEditingProd(null); setEditProdPhoto(null); loadProducts();
                       }} style={{ background: 'var(--gold)', color: 'var(--black)', border: 'none', padding: '8px 16px', borderRadius: 6, fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>Save</button>
                       <button onClick={() => { setEditingProd(null); setEditProdPhoto(null); }} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.4)', padding: '8px 16px', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>Cancel</button>
@@ -1215,7 +1245,7 @@ function ProductsTab({ products, showToast, loadProducts, uploadPhoto }: {
                       </div>
                     </div>
                     <div className="list-item-actions" style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                      <button onClick={() => { setEditingProd(p.id); setEditProdName(p.name); setEditProdSeries(p.series || ''); setEditProdPrice(String(p.price)); setEditProdStock(String(p.stock || 0)); setEditProdDesc(p.description || ''); setEditProdBadge(p.badge || ''); }}
+                      <button onClick={() => { setEditingProd(p.id); setEditProdName(p.name); setEditProdSeries(p.series || ''); setEditProdPrice(String(p.price)); setEditProdStock(String(p.stock || 0)); setEditProdDesc(p.description || ''); setEditProdBadge(p.badge || ''); setEditProdCardsPerPack(p.cardsPerPack ? String(p.cardsPerPack) : ''); setEditProdLanguage((p as ProdItem & {language?:string}).language || 'English'); }}
                         style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)', padding: '6px 12px', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>✏️ Edit</button>
                       {deletingProd === p.id ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -1255,6 +1285,8 @@ function RewardsTab({ rewards, showToast, loadRewards, uploadPhoto }: {
   const [rwDesc, setRwDesc] = useState('');
   const [rwEmoji, setRwEmoji] = useState('⭐');
   const [rwBadge, setRwBadge] = useState('');
+  const [rwCardsPerPack, setRwCardsPerPack] = useState('');
+  const [rwLanguage, setRwLanguage] = useState('');
   const [rwPhotos, setRwPhotos] = useState<Array<{ file: File; preview: string; uploading: boolean }>>([]);
   const [editingRw, setEditingRw] = useState<string | null>(null);
   const [deletingRw, setDeletingRw] = useState<string | null>(null);
@@ -1264,6 +1296,8 @@ function RewardsTab({ rewards, showToast, loadRewards, uploadPhoto }: {
   const [editRwStock, setEditRwStock] = useState('');
   const [editRwDesc, setEditRwDesc] = useState('');
   const [editRwBadge, setEditRwBadge] = useState('');
+  const [editRwCardsPerPack, setEditRwCardsPerPack] = useState('');
+  const [editRwLanguage, setEditRwLanguage] = useState('');
   const [editRwPhoto, setEditRwPhoto] = useState<{ file: File; preview: string; uploading: boolean } | null>(null);
 
   return (
@@ -1310,6 +1344,21 @@ function RewardsTab({ rewards, showToast, loadRewards, uploadPhoto }: {
               <option value="LIMITED">LIMITED</option>
             </select>
           </div>
+          <div>
+            <label style={lbl}>Cards Per Pack</label>
+            <input type="number" placeholder="10" value={rwCardsPerPack} onChange={e => setRwCardsPerPack(e.target.value)} style={{ ...inp, marginBottom: 0 }} />
+          </div>
+          <div>
+            <label style={lbl}>Language</label>
+            <select value={rwLanguage} onChange={e => setRwLanguage(e.target.value)} style={{ ...inp, marginBottom: 0 }}>
+              <option value="">Varies</option>
+              <option value="English">English</option>
+              <option value="Japanese">Japanese</option>
+              <option value="Indonesian">Indonesian</option>
+              <option value="Korean">Korean</option>
+              <option value="Chinese">Chinese</option>
+            </select>
+          </div>
         </div>
         <label style={lbl}>Description</label>
         <textarea placeholder="Reward description..." value={rwDesc} onChange={e => setRwDesc(e.target.value)} rows={3} style={{ ...inp, resize: 'vertical' }} />
@@ -1322,9 +1371,9 @@ function RewardsTab({ rewards, showToast, loadRewards, uploadPhoto }: {
             setRwPhotos(prev => prev.map(p => ({ ...p, uploading: true })));
             imageUrl = await uploadPhoto(rwPhotos[0].file, 'redeemable');
           }
-          await upsertRedeemableProduct(null, { name: rwName, category: rwCategory, pointsCost: parseInt(rwPoints) || 0, stock: parseInt(rwStock) || 0, description: rwDesc, emoji: rwEmoji, badge: rwBadge || null, ...(imageUrl && { imageUrl }) });
+          await upsertRedeemableProduct(null, { name: rwName, category: rwCategory, pointsCost: parseInt(rwPoints) || 0, stock: parseInt(rwStock) || 0, description: rwDesc, emoji: rwEmoji, badge: rwBadge || null, cardsPerPack: parseInt(rwCardsPerPack) || null, language: rwLanguage || null, ...(imageUrl && { imageUrl }) });
           showToast(`✓ "${rwName}" reward added`);
-          setRwName(''); setRwCategory(''); setRwPoints(''); setRwStock(''); setRwDesc(''); setRwEmoji('⭐'); setRwBadge(''); setRwPhotos([]);
+          setRwName(''); setRwCategory(''); setRwPoints(''); setRwStock(''); setRwDesc(''); setRwEmoji('⭐'); setRwBadge(''); setRwCardsPerPack(''); setRwLanguage(''); setRwPhotos([]);
           loadRewards();
         }} style={btn}>Add Reward →</button>
       </div>
@@ -1345,6 +1394,18 @@ function RewardsTab({ rewards, showToast, loadRewards, uploadPhoto }: {
                       <div><label style={lbl}>Category</label><input value={editRwCategory} onChange={e => setEditRwCategory(e.target.value)} style={{ ...inp, marginBottom: 0 }} /></div>
                       <div><label style={lbl}>Points Required ⭐</label><input type="number" value={editRwPoints} onChange={e => setEditRwPoints(e.target.value)} style={{ ...inp, marginBottom: 0 }} /></div>
                       <div><label style={lbl}>Stock</label><input type="number" value={editRwStock} onChange={e => setEditRwStock(e.target.value)} style={{ ...inp, marginBottom: 0 }} /></div>
+                      <div><label style={lbl}>Cards Per Pack</label><input type="number" value={editRwCardsPerPack} onChange={e => setEditRwCardsPerPack(e.target.value)} style={{ ...inp, marginBottom: 0 }} /></div>
+                      <div>
+                        <label style={lbl}>Language</label>
+                        <select value={editRwLanguage} onChange={e => setEditRwLanguage(e.target.value)} style={{ ...inp, marginBottom: 0 }}>
+                          <option value="">Varies</option>
+                          <option value="English">English</option>
+                          <option value="Japanese">Japanese</option>
+                          <option value="Indonesian">Indonesian</option>
+                          <option value="Korean">Korean</option>
+                          <option value="Chinese">Chinese</option>
+                        </select>
+                      </div>
                     </div>
                     <label style={lbl}>Badge</label>
                     <select value={editRwBadge} onChange={e => setEditRwBadge(e.target.value)} style={{ ...inp, width: 140 }}>
@@ -1375,7 +1436,7 @@ function RewardsTab({ rewards, showToast, loadRewards, uploadPhoto }: {
                           if (r.imageUrl) { try { const { ref, deleteObject } = await import('firebase/storage'); const { storage } = await import('@/lib/firebase'); await deleteObject(ref(storage, r.imageUrl)); } catch { } }
                           imageUrl = await uploadPhoto(editRwPhoto.file, 'redeemable');
                         }
-                        await upsertRedeemableProduct(r.id, { name: editRwName, category: editRwCategory, pointsCost: parseInt(editRwPoints) || 0, stock: parseInt(editRwStock) || 0, description: editRwDesc, badge: editRwBadge || null, imageUrl });
+                        await upsertRedeemableProduct(r.id, { name: editRwName, category: editRwCategory, pointsCost: parseInt(editRwPoints) || 0, stock: parseInt(editRwStock) || 0, description: editRwDesc, badge: editRwBadge || null, cardsPerPack: parseInt(editRwCardsPerPack) || null, language: editRwLanguage || null, imageUrl });
                         showToast(`✓ "${editRwName}" updated`); setEditingRw(null); setEditRwPhoto(null); loadRewards();
                       }} style={{ background: 'var(--gold)', color: 'var(--black)', border: 'none', padding: '8px 16px', borderRadius: 6, fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>Save</button>
                       <button onClick={() => { setEditingRw(null); setEditRwPhoto(null); }} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.4)', padding: '8px 16px', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}>Cancel</button>
@@ -1398,7 +1459,7 @@ function RewardsTab({ rewards, showToast, loadRewards, uploadPhoto }: {
                       </div>
                     </div>
                     <div className="list-item-actions" style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                      <button onClick={() => { setEditingRw(r.id); setEditRwName(r.name); setEditRwCategory(r.category || ''); setEditRwPoints(String(r.pointsCost)); setEditRwStock(String(r.stock || 0)); setEditRwDesc(r.description || ''); setEditRwBadge(r.badge || ''); }}
+                      <button onClick={() => { setEditingRw(r.id); setEditRwName(r.name); setEditRwCategory(r.category || ''); setEditRwPoints(String(r.pointsCost)); setEditRwStock(String(r.stock || 0)); setEditRwDesc(r.description || ''); setEditRwBadge(r.badge || ''); setEditRwCardsPerPack(r.cardsPerPack ? String(r.cardsPerPack) : ''); setEditRwLanguage(r.language || ''); }}
                         style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)', padding: '6px 12px', borderRadius: 6, cursor: 'pointer', fontSize: 12 }}>✏️ Edit</button>
                       {deletingRw === r.id ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>

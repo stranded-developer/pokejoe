@@ -10,9 +10,30 @@ import { db } from '@/lib/firebase';
 type RedeemProduct = { id:string; name:string; category?:string; pointsCost:number; stock?:number; emoji?:string; imageUrl?:string; images?:string[]; description?:string; language?:string; badge?:string; };
 
 const FALLBACK: Record<string,RedeemProduct> = {
-  'r1': { id:'r1', name:'PSA Graded Slab', category:'Grading Service', pointsCost:50, emoji:'🏆', description:'Submit your pulled card for professional PSA grading. Includes slabbing, authentication, and grading. Final grade may vary based on card condition.' },
-  'r2': { id:'r2', name:'Charizard ex Premium Box', category:'Sealed Product', pointsCost:30, emoji:'🔥', description:'Premium collection box featuring the iconic Charizard ex with exclusive promo cards and booster packs.' },
+  'r1': { id:'r1', name:'PSA Graded Slab',         category:'Grading Service', pointsCost:50, emoji:'🏆', description:'Submit your pulled card for professional PSA grading. Includes slabbing, authentication, and grading. Final grade may vary based on card condition.' },
+  'r2': { id:'r2', name:'Charizard ex Premium Box', category:'Sealed Product',  pointsCost:30, emoji:'🔥', description:'Premium collection box featuring the iconic Charizard ex with exclusive promo cards and booster packs.' },
 };
+
+// ── Stock badge — large, for detail pages ─────────────────────────
+function StockBadge({ stock }: { stock?: number }) {
+  if (stock === undefined) return null;
+
+  let color: string, bg: string, border: string, label: string, icon: string;
+  if (stock === 0) {
+    color='#E63946'; bg='rgba(230,57,70,0.1)'; border='rgba(230,57,70,0.25)'; label='Out of Stock'; icon='✕';
+  } else if (stock <= 5) {
+    color='#D97706'; bg='rgba(217,119,6,0.1)';  border='rgba(217,119,6,0.25)';  label=`Only ${stock} left`; icon='⚠';
+  } else {
+    color='#16a34a'; bg='rgba(22,163,74,0.08)'; border='rgba(22,163,74,0.2)';  label=`${stock} in stock`; icon='✓';
+  }
+
+  return (
+    <div style={{ display:'inline-flex', alignItems:'center', gap:8, color, background:bg, border:`1px solid ${border}`, padding:'8px 16px', borderRadius:10, fontSize:14, fontWeight:700 }}>
+      <span style={{ fontSize:16 }}>{icon}</span>
+      {label}
+    </div>
+  );
+}
 
 export default function RedeemDetailPage() {
   const { id } = useParams() as { id:string };
@@ -50,6 +71,7 @@ export default function RedeemDetailPage() {
   );
 
   const imgs = product.images?.length ? product.images : product.imageUrl ? [product.imageUrl] : [];
+  const outOfStock = product.stock === 0;
   const waMsg = `Hi PokeJoe! I want to redeem: ${product.name} (${product.pointsCost} points). Please confirm my eligibility.`;
 
   return (
@@ -67,15 +89,18 @@ export default function RedeemDetailPage() {
           {/* Image */}
           <div>
             <div style={{ background:'linear-gradient(135deg,#FDF8EC,#F0DFA0)', borderRadius:20, aspectRatio:'1', display:'flex', alignItems:'center', justifyContent:'center', fontSize:140, position:'relative', overflow:'hidden' }}>
+              {outOfStock && (
+                <div style={{ position:'absolute', inset:0, background:'rgba(255,255,255,0.45)', zIndex:4, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  <div style={{ background:'rgba(230,57,70,0.92)', color:'white', fontSize:13, fontWeight:700, padding:'8px 20px', borderRadius:24, letterSpacing:'0.08em' }}>OUT OF STOCK</div>
+                </div>
+              )}
               {imgs.length > 0 ? (
                 <>
                   <img src={imgs[activeImg]} alt={product.name} style={{ width:'100%', height:'100%', objectFit:'cover', position:'absolute', inset:0 }} />
                   {imgs.length > 1 && (
                     <>
-                      <button onClick={()=>setActiveImg(i=>(i-1+imgs.length)%imgs.length)}
-                        style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', zIndex:2, background:'rgba(0,0,0,0.4)', border:'none', color:'white', width:36, height:36, borderRadius:'50%', cursor:'pointer', fontSize:20, display:'flex', alignItems:'center', justifyContent:'center' }}>‹</button>
-                      <button onClick={()=>setActiveImg(i=>(i+1)%imgs.length)}
-                        style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', zIndex:2, background:'rgba(0,0,0,0.4)', border:'none', color:'white', width:36, height:36, borderRadius:'50%', cursor:'pointer', fontSize:20, display:'flex', alignItems:'center', justifyContent:'center' }}>›</button>
+                      <button onClick={()=>setActiveImg(i=>(i-1+imgs.length)%imgs.length)} style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', zIndex:2, background:'rgba(0,0,0,0.4)', border:'none', color:'white', width:36, height:36, borderRadius:'50%', cursor:'pointer', fontSize:20, display:'flex', alignItems:'center', justifyContent:'center' }}>‹</button>
+                      <button onClick={()=>setActiveImg(i=>(i+1)%imgs.length)} style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', zIndex:2, background:'rgba(0,0,0,0.4)', border:'none', color:'white', width:36, height:36, borderRadius:'50%', cursor:'pointer', fontSize:20, display:'flex', alignItems:'center', justifyContent:'center' }}>›</button>
                     </>
                   )}
                 </>
@@ -88,7 +113,7 @@ export default function RedeemDetailPage() {
             </div>
             {imgs.length > 1 && (
               <div style={{ display:'flex', gap:10, marginTop:16, flexWrap:'wrap' }}>
-                {imgs.map((url,i)=>(
+                {imgs.map((url,i) => (
                   <div key={i} onClick={()=>setActiveImg(i)} style={{ width:64, height:64, borderRadius:8, overflow:'hidden', border:i===activeImg?'2px solid var(--gold)':'2px solid transparent', cursor:'pointer', flexShrink:0 }}>
                     <img src={url} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
                   </div>
@@ -110,8 +135,8 @@ export default function RedeemDetailPage() {
             </h1>
 
             {/* Points cost */}
-            <div style={{ display:'flex', alignItems:'center', gap:16, marginBottom:8, flexWrap:'wrap' }}>
-              <div style={{ display:'flex', alignItems:'center', gap:10, background:'rgba(212,160,23,0.08)', border:'2px solid rgba(212,160,23,0.3)', padding:'12px 20px', borderRadius:12 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:16, marginBottom:16, flexWrap:'wrap' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:10, background:'rgba(212,160,23,0.08)', border:`2px solid ${outOfStock ? 'rgba(212,160,23,0.15)' : 'rgba(212,160,23,0.3)'}`, padding:'12px 20px', borderRadius:12, opacity: outOfStock ? 0.6 : 1 }}>
                 <span style={{ fontSize:28 }}>⭐</span>
                 <div>
                   <div style={{ fontFamily:'var(--ff-mono)', fontSize:36, fontWeight:700, color:'var(--gold)', lineHeight:1 }}>{product.pointsCost}</div>
@@ -124,19 +149,34 @@ export default function RedeemDetailPage() {
               </div>
             </div>
 
-            <hr style={{ border:'none', borderTop:'1px solid #EEF0F5', margin:'24px 0' }} />
+            {/* ── STOCK BADGE (prominent) ── */}
+            <div style={{ marginBottom:20 }}>
+              <StockBadge stock={product.stock} />
+            </div>
+
+            <hr style={{ border:'none', borderTop:'1px solid #EEF0F5', margin:'0 0 24px' }} />
 
             {product.description && (
               <p style={{ fontSize:14, color:'#5A6278', lineHeight:1.8, marginBottom:24, fontWeight:300 }}>{product.description}</p>
             )}
 
+            {/* Stats grid */}
             <div className="redeem-stats-grid">
               {[
-                { val: product.stock !== undefined ? (product.stock > 10 ? 'Available' : `${product.stock} left`) : 'Available', label:'Availability' },
-                { val: product.language || 'Varies', label:'Language' },
-              ].map((s,i)=>(
-                <div key={i} style={{ background:'#F2F4F8', borderRadius:8, padding:'14px 16px', textAlign:'center' }}>
-                  <div style={{ fontFamily:'var(--ff-mono)', fontSize:16, fontWeight:700, color:'var(--black)' }}>{s.val}</div>
+                {
+                  val: product.stock === undefined ? 'Available'
+                     : product.stock === 0         ? 'Unavailable'
+                     : 'Available',
+                  label: 'Availability',
+                  color: product.stock === 0               ? '#E63946'
+                       : product.stock !== undefined && product.stock <= 5 ? '#D97706'
+                       : '#16a34a',
+                },
+                { val: product.language || 'Varies', label:'Language', color: undefined },
+                ...(product.cardsPerPack ? [{ val: `${product.cardsPerPack}`, label: 'Cards/Pack', color: undefined }] : []),
+              ].map((s,i) => (
+                <div key={i} style={{ background:'#F2F4F8', borderRadius:8, padding:'14px 16px', textAlign:'center', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', minHeight:72 }}>
+                  <div style={{ fontFamily:'var(--ff-mono)', fontSize:16, fontWeight:700, color: s.color || 'var(--black)' }}>{s.val}</div>
                   <div style={{ fontSize:10, color:'#8892A8', marginTop:3, textTransform:'uppercase', letterSpacing:'0.08em' }}>{s.label}</div>
                 </div>
               ))}
@@ -153,10 +193,16 @@ export default function RedeemDetailPage() {
               </ol>
             </div>
 
-            <a href={`https://wa.me/${waNumber}?text=${encodeURIComponent(waMsg)}`} target="_blank" rel="noopener noreferrer"
-              style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8, background:'#25D366', color:'white', textDecoration:'none', padding:16, borderRadius:8, fontSize:14, fontWeight:600, marginBottom:12 }}>
-              💬 Redeem via WhatsApp
-            </a>
+            {outOfStock ? (
+              <div style={{ background:'rgba(230,57,70,0.06)', border:'1px solid rgba(230,57,70,0.15)', borderRadius:8, padding:'14px 16px', fontSize:13, color:'#E63946', textAlign:'center', fontWeight:500, marginBottom:12 }}>
+                This reward is currently out of stock. Contact us on WhatsApp to be notified when it&apos;s available again.
+              </div>
+            ) : (
+              <a href={`https://wa.me/${waNumber}?text=${encodeURIComponent(waMsg)}`} target="_blank" rel="noopener noreferrer"
+                style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8, background:'#25D366', color:'white', textDecoration:'none', padding:16, borderRadius:8, fontSize:14, fontWeight:600, marginBottom:12 }}>
+                💬 Redeem via WhatsApp
+              </a>
+            )}
 
             <Link href="/vault" style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8, background:'rgba(212,160,23,0.08)', border:'1px solid rgba(212,160,23,0.25)', color:'var(--gold)', textDecoration:'none', padding:'13px 16px', borderRadius:8, fontSize:14, fontWeight:600 }}>
               ⭐ Check My Points Balance
