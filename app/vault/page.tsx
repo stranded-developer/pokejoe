@@ -82,7 +82,7 @@ export default function VaultPage() {
   const [loading, setLoading] = useState(false);
   const [customer, setCustomer] = useState<Customer|null>(null);
   const [vaultItems, setVaultItems] = useState<VaultItem[]>([]);
-  const [activeTab, setActiveTab] = useState<'points'|'items'|'redeem'>('points');
+  const [activeTab, setActiveTab] = useState<'points'|'items'|'psa'|'redeem'>('points');
 
   useEffect(() => {
     const saved = localStorage.getItem(SESSION_KEY);
