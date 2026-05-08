@@ -219,9 +219,9 @@ export default function VaultPage() {
                 </div>
                 <div style={{ fontSize:13, color:'rgba(255,255,255,0.25)', marginTop:6 }}>Rp 100,000 spent = 1 point</div>
               </div>
-              <button onClick={() => setActiveTab('redeem')} style={{ background:'var(--gold)', color:'var(--black)', border:'none', padding:'14px 24px', borderRadius:8, fontFamily:'var(--ff-body)', fontSize:14, fontWeight:600, cursor:'pointer', whiteSpace:'nowrap' }}>
-                Redeem Points →
-              </button>
+              <button onClick={() => setActiveTab('redeem')} style={{ background:'var(--gold)', color:'var(--black)', border:'none', padding:'14px 24px', borderRadius:8, fontFamily:'var(--ff-body)', fontSize:14, fontWeight:600, cursor:'pointer', whiteSpace:'nowrap', position:'relative', zIndex:1 }}>
+  Redeem Points →
+</button>
             </div>
 
             <div className="vault-content">

@@ -77,13 +77,12 @@ export default function Navbar({ loggedInUser: propUser, onLogout: propLogout }:
     <>
       <nav style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-        height: 'var(--nav-h)', background: 'rgba(255,255,255,0.97)',
-        backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(0,0,0,0.06)',
+        height: 'var(--nav-h)', background: '#ffffff', borderBottom: '1px solid rgba(0,0,0,0.06)',
         display: 'flex', alignItems: 'center', padding: '0 20px', gap: '20px',
       }}>
-        <Link href="/" style={{ fontFamily: 'var(--ff-display)', fontSize: 28, color: 'var(--black)', letterSpacing: '0.06em', textDecoration: 'none', flexShrink: 0 }}>
-          POKE<span style={{ color: 'var(--gold)' }}>JOE</span>
-        </Link>
+        <Link href="/" style={{ textDecoration: 'none', flexShrink: 0, display: 'flex', alignItems: 'center' }}>
+  <img src="/pokejoe.JPG" alt="PokeJoe" style={{ height: 58, width: 'auto', display: 'block' }} />
+</Link>
 
         {/* Desktop links — all plain, active = gold */}
         <div className="nav-desktop-links" style={{ display: 'flex', gap: 24, flex: 1, alignItems: 'center' }}>
